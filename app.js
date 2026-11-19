@@ -1,6 +1,6 @@
 "use strict";
 (() => {
-const CFG = window.ACADEMY_CONFIG || {}, DEMO = !CFG.supabaseUrl || /[?&]demo\b/.test(location.search), VER = "0.3.1";
+const CFG = window.ACADEMY_CONFIG || {}, DEMO = !CFG.supabaseUrl || /[?&]demo\b/.test(location.search), VER = "0.3.2";
 const $app = document.getElementById("app"), $modal = document.getElementById("modal"), $aviso = document.getElementById("aviso");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const D0 = s => new Date(String(s).slice(0, 10) + "T12:00:00");
@@ -228,7 +228,7 @@ let pintaCons = null;
 function vFicha(pid) {
   const p = B.pes.get(pid); if (!p) return vai("consultores");
   const hist = (B.porPes.get(pid) || []).map(v => ({ v, s: B.ses.get(v.sessao_id) })).sort((x, y) => ordSes(y.s, x.s)), reps = (B.repPes.get(pid) || []).slice().sort((x, y) => y.id - x.id);
-  const info = (a, e) => { const st = e.st === "concluida" ? (e.k.criterio === "equivalencia" ? "Por equivalência" : `Concluída em ${dtc(e.s && e.s.data)}`) : e.st === "agendada" ? `Agendada para ${dtc(e.s && e.s.data)}` : e.st === "reposicao" ? "Precisa de reposição" : e.st === "proxima" ? "Pode ser convocado" : B.C.exige_ordem ? "Depois da aula anterior" : "Pendente";
+  const info = (a, e) => { const st = e.st === "concluida" ? (e.k.criterio === "equivalencia" ? "Por equivalência" : e.k.criterio === "historico" ? "Concluída antes do sistema (histórico UMC)" : `Concluída em ${dtc(e.s && e.s.data)}`) : e.st === "agendada" ? `Agendada para ${dtc(e.s && e.s.data)}` : e.st === "reposicao" ? "Precisa de reposição" : e.st === "proxima" ? "Pode ser convocado" : B.C.exige_ordem ? "Depois da aula anterior" : "Pendente";
     return `<div class="info"><b>Aula ${a.numero}</b><span class="st ${e.st}">${st}</span><span class="st peq">${esc(a.titulo)}</span>${admin() && B.C.permite_equivalencia && e.st !== "concluida" ? `<div class="acs"><button class="btn txt peq" data-eq="${esc(pid)}|${a.id}">Equivalência</button></div>` : ""}</div>`; };
   const nvs = B.niveis.filter(n => n === "N1" || hist.some(x => B.aul.get(x.s.aula_id).nivel === n) || B.provPes.has(pid + "|" + n) || B.cert.has(pid + "|" + n));
   const marcosLin = nvs.flatMap(n => { const m = marcos(pid, n); return [...m.tentativas.map(r => ({ data: r.data, html: `<tr><td>${dt(r.data)}</td><td>${n}</td><td>Prova</td><td><span class="chip ${r.resultado === "aprovado" ? "p-pres" : "p-falta"}">${r.resultado === "aprovado" ? "Aprovado" : "Reprovado"}</span>${r.nota != null ? ` <span class="muted">nota ${String(r.nota).replace(".", ",")}</span>` : ""}</td><td>${esc(r.registrado_por || "")}${r.obs ? `<div class="muted peq">${esc(r.obs)}</div>` : ""}</td>${pode() ? `<td><button class="btn txt peq" data-xp="${r.id}">Excluir</button></td>` : ""}</tr>` })),
