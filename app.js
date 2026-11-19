@@ -1,6 +1,6 @@
 "use strict";
 (() => {
-const CFG = window.ACADEMY_CONFIG || {}, DEMO = !CFG.supabaseUrl || /[?&]demo\b/.test(location.search), VER = "0.2.0";
+const CFG = window.ACADEMY_CONFIG || {}, DEMO = !CFG.supabaseUrl || /[?&]demo\b/.test(location.search), VER = "0.2.1";
 const $app = document.getElementById("app"), $modal = document.getElementById("modal"), $aviso = document.getElementById("aviso");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const D0 = s => new Date(String(s).slice(0, 10) + "T12:00:00");
@@ -343,10 +343,10 @@ function vCat() {
   casca(`<div class="kpis"><div class="kpi k-branco"><b>${B.aulas.filter(a => a.situacao !== "inativo").length}</b><span>Aulas no catálogo</span><small>${B.aulas.filter(a => a.situacao === "provisorio").length} com título provisório</small></div><div class="kpi k-branco"><b>${B.turmas.length}</b><span>Turmas</span></div><div class="kpi k-branco"><b>${B.sessoes.length}</b><span>Sessões registradas</span></div><div class="kpi k-branco"><b>${n0(B.pessoas.filter(ativo).length)}</b><span>Ativos com ID</span><small>${B.sem_id.length} sem ID (repetido)</small></div></div>
   <h2><i class="bolinha b-verde"></i>Aulas ${admin() ? `<button class="btn sec peq dir" data-a="nova-aula">${IC.mais}Nova aula</button>` : ""}</h2>
   <div class="tab"><table><thead><tr><th>Código</th><th>Nível</th><th>Título</th><th class="n">Duração padrão</th><th>Conteúdo</th>${admin() ? "<th></th>" : ""}</tr></thead><tbody>${B.aulas.map(a => `<tr><td><b>${esc(a.id)}</b></td><td>${esc(a.nivel)} · Aula ${a.numero}</td><td>${esc(a.titulo)}</td><td class="n">${fh(a.duracao_min)}</td><td><span class="chip ${a.situacao === "oficial" ? "p-pres" : a.situacao === "inativo" ? "p-na" : "p-mesa"}">${{ provisorio: "Provisório", oficial: "Oficial", inativo: "Inativo" }[a.situacao]}</span></td>${admin() ? `<td><button class="btn txt peq" data-ea="${a.id}">Editar</button></td>` : ""}</tr>`).join("")}</tbody></table></div>
-  <p class="nota">${IC.info}<span>Os títulos são provisórios até a UMC enviar o catálogo oficial. N2, N3 e N4 entram aqui quando forem liberados: o resto do sistema já está preparado.</span></p>
+  <p class="nota">${IC.info}<span>Catálogo oficial da UMC (19/11/2026): N1 a N4, todas as aulas com 1h30. Prova de avaliação e certificado de cada nível ainda não são controlados aqui.</span></p>
   <h2><i class="bolinha b-azul"></i>Turmas ${pode() ? `<button class="btn sec peq dir" data-a="nova-turma">${IC.mais}Nova turma</button>` : ""}</h2>
   <div class="tab"><table><thead><tr><th>Turma</th><th>Nível</th><th class="n">Sessões</th><th class="n">Pessoas</th><th>Observação</th>${pode() ? "<th></th>" : ""}</tr></thead><tbody>${B.turmas.map(t => { const ss = B.sessoes.filter(s => s.turma_id === t.id), pp = new Set(ss.flatMap(s => (B.porSes.get(s.id) || []).map(v => v.pessoa_id))); return `<tr><td><b>${esc(t.nome)}</b></td><td>${esc(t.nivel)}</td><td class="n">${ss.length}</td><td class="n">${pp.size}</td><td>${esc(t.obs || "")}</td>${pode() ? `<td><button class="btn txt peq" data-et="${t.id}">Editar</button></td>` : ""}</tr>`; }).join("") || `<tr><td colspan="6" class="muted">Nenhuma turma.</td></tr>`}</tbody></table></div>
-  <h2><i class="bolinha b-verm"></i>Regras da chamada <small>aguardando validação da UMC</small>${admin() ? `<button class="btn sec peq dir" data-a="regras">Editar regras</button>` : ""}</h2>
+  <h2><i class="bolinha b-verm"></i>Regras da chamada <small>"em mesa" e ordem confirmados pela UMC em 19/11/2026</small>${admin() ? `<button class="btn sec peq dir" data-a="regras">Editar regras</button>` : ""}</h2>
   <div class="painel regras"><div><b>Concluem a aula</b>${chips(C.status_conclui)}</div><div><b>Geram reposição</b>${chips(C.status_reposicao)}</div><div><b>Saem da conta da adesão</b>${chips(C.status_fora_denominador)}</div><div><b>Ordem das aulas</b>${C.exige_ordem ? "Só é elegível para a Aula N quem concluiu a anterior" : "Qualquer aula, em qualquer ordem"}</div><div><b>Equivalência</b>${C.permite_equivalencia ? "Permitida (admin, com motivo)" : "Desligada"}</div><div><b>Sala padrão</b>${esc(C.sala_padrao)}</div><div><b>Status vazio</b>Nunca vira falta: a chamada só fecha com todos lançados</div></div>
   <p class="rodape">Versão ${VER}${DEMO ? ` · <button class="lnk" data-a="reset">Reiniciar demonstração</button>` : ""}</p>`,
   { sub: "Aulas, turmas e regras que valem para todo o sistema" });
@@ -364,7 +364,7 @@ const age = (fn, ok) => async ev => { const bt = ev.currentTarget; ocupa(bt, tru
 const bts = (txt, perigo) => `<div class="bts"><button class="btn txt" data-a="fecha">Voltar</button><button class="btn${perigo ? " perigo" : ""}" id="go">${txt}</button></div><div class="erro" id="er" role="alert"></div>`;
 
 function dlgSessao(s, pre = {}) {
-  const ed = !!s, a0 = s ? s.aula_id : pre.aula_id || (B.nivelAulas("N1")[0] || B.aulas[0] || {}).id, aulaDur = id => (B.aul.get(id) || {}).duracao_min || 120;
+  const ed = !!s, a0 = s ? s.aula_id : pre.aula_id || (B.nivelAulas("N1")[0] || B.aulas[0] || {}).id, aulaDur = id => (B.aul.get(id) || {}).duracao_min || 90;
   const fimDe = (ini, id) => { const m = minutos(ini) + aulaDur(id); return String(Math.floor(m / 60) % 24).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
   const turmas = B.turmas.map(t => [t.id, t.nome]);
   modal(`<h2>${ed ? "Editar sessão" : "Nova sessão"}</h2>
@@ -437,7 +437,7 @@ function dlgAgendar(rid) {
 function dlgAula(id) {
   const a = id ? B.aul.get(id) : null;
   modal(`<h2>${a ? "Editar aula" : "Nova aula"}</h2><div class="grade2"><div class="campo"><label for="an">Nível</label><select id="an" ${a ? "disabled" : ""}>${op(["N1", "N2", "N3", "N4"], a ? a.nivel : "N1")}</select></div><div class="campo"><label for="au">Número da aula</label><input id="au" type="number" min="1" value="${a ? a.numero : ""}" ${a ? "disabled" : ""}></div>
-  <div class="campo c2"><label for="at">Título</label><input id="at" value="${esc(a ? a.titulo : "")}"></div><div class="campo"><label for="ad">Duração padrão (min)</label><input id="ad" type="number" min="1" value="${a ? a.duracao_min : 120}"></div><div class="campo"><label for="as">Conteúdo</label><select id="as">${op([["provisorio", "Provisório"], ["oficial", "Oficial"], ["inativo", "Inativo"]], a ? a.situacao : "provisorio")}</select></div></div>${bts("Salvar")}`);
+  <div class="campo c2"><label for="at">Título</label><input id="at" value="${esc(a ? a.titulo : "")}"></div><div class="campo"><label for="ad">Duração padrão (min)</label><input id="ad" type="number" min="1" value="${a ? a.duracao_min : 90}"></div><div class="campo"><label for="as">Conteúdo</label><select id="as">${op([["provisorio", "Provisório"], ["oficial", "Oficial"], ["inativo", "Inativo"]], a ? a.situacao : "provisorio")}</select></div></div>${bts("Salvar")}`);
   document.getElementById("go").onclick = age(() => rpc("academy_salvar_aula", { p: { nivel: val("an"), numero: val("au"), titulo: val("at"), duracao_min: val("ad"), situacao: val("as") } }), "Aula salva.");
 }
 function dlgTurma(id) {

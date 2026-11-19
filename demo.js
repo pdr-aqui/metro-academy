@@ -2,7 +2,7 @@
 /* Modo demonstração: as MESMAS regras de banco/01_schema_academy.sql, rodando neste aparelho (localStorage).
    Serve para homologar com a Victoria sem tocar em dado real. Pessoas e turmas são fictícias. */
 window.AcademyDemo = (() => {
-const CHAVE = "academy_demo_v1";
+const CHAVE = "academy_demo_v2";
 let S = null, usuario = null;
 const hojeISO = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 const somaDias = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toLocaleDateString("sv-SE"); };
@@ -152,10 +152,22 @@ function semeia() {
   S = { seq: { ses: 0, tur: 0, rep: 0 }, sync_em: new Date(Date.now() - 23 * 60000).toISOString(),
     config: { status_conclui: ["Presente"], status_reposicao: ["Falta", "Justificada / afastado", "Em mesa"], status_fora_denominador: ["Não se aplica", "Desligado"], exige_ordem: true, permite_equivalencia: false, sala_padrao: "Sala de vidro – 39º andar", atualizado_em: null, atualizado_por: null },
     pessoas: D.pessoas, aulas: [
-      { id: "N1-A1", nivel: "N1", numero: 1, titulo: "Título a confirmar pela UMC", duracao_min: 120, situacao: "provisorio" },
-      { id: "N1-A2", nivel: "N1", numero: 2, titulo: "Título a confirmar pela UMC", duracao_min: 180, situacao: "provisorio" },
-      { id: "N1-A3", nivel: "N1", numero: 3, titulo: "Título a confirmar pela UMC", duracao_min: 180, situacao: "provisorio" },
-      { id: "N1-A4", nivel: "N1", numero: 4, titulo: "Título a confirmar pela UMC", duracao_min: 180, situacao: "provisorio" }],
+      { id: "N1-A1", nivel: "N1", numero: 1, titulo: "+Agendamentos", duracao_min: 90, situacao: "oficial" },
+      { id: "N1-A2", nivel: "N1", numero: 2, titulo: "\"Non ducor, duco\" (Dinâmica de ligação)", duracao_min: 90, situacao: "oficial" },
+      { id: "N1-A3", nivel: "N1", numero: 3, titulo: "CRM Salesforce", duracao_min: 90, situacao: "oficial" },
+      { id: "N1-A4", nivel: "N1", numero: 4, titulo: "Apresentação do Produto", duracao_min: 90, situacao: "oficial" },
+      { id: "N1-A5", nivel: "N1", numero: 5, titulo: "Gerando os três 10", duracao_min: 90, situacao: "oficial" },
+      { id: "N1-A6", nivel: "N1", numero: 6, titulo: "Flow Pay", duracao_min: 90, situacao: "oficial" },
+      { id: "N2-A1", nivel: "N2", numero: 1, titulo: "Objeções", duracao_min: 90, situacao: "oficial" },
+      { id: "N2-A2", nivel: "N2", numero: 2, titulo: "Caixa", duracao_min: 90, situacao: "oficial" },
+      { id: "N2-A3", nivel: "N2", numero: 3, titulo: "Direto MC", duracao_min: 90, situacao: "oficial" },
+      { id: "N2-A4", nivel: "N2", numero: 4, titulo: "Processos comerciais", duracao_min: 90, situacao: "oficial" },
+      { id: "N2-A5", nivel: "N2", numero: 5, titulo: "A magia é na mesa! (Participação de um gestor)", duracao_min: 90, situacao: "oficial" },
+      { id: "N3-A1", nivel: "N3", numero: 1, titulo: "+Investimento", duracao_min: 90, situacao: "oficial" },
+      { id: "N3-A2", nivel: "N3", numero: 2, titulo: "Rentabilidade", duracao_min: 90, situacao: "oficial" },
+      { id: "N3-A3", nivel: "N3", numero: 3, titulo: "Tudo é networking!", duracao_min: 90, situacao: "oficial" },
+      { id: "N4-A1", nivel: "N4", numero: 1, titulo: "Alta Performance", duracao_min: 90, situacao: "oficial" },
+      { id: "N4-A2", nivel: "N4", numero: 2, titulo: "+Líder", duracao_min: 90, situacao: "oficial" }],
     turmas: [], sessoes: [], convocacoes: [], conclusoes: [], reposicoes: [], auditoria: [] };
   const eu = usuario; usuario = { nome: "Victoria Soares", papel: "operador" };
   const g = D.grupos, T = n => F.academy_salvar_turma({ p: { nome: n, nivel: "N1" } });
@@ -166,30 +178,30 @@ function semeia() {
   const fecha = (s, min) => F.academy_fechar_chamada({ p_sessao: s, p_duracao_min: min });
   const todos = (s, st) => F.academy_marcar_pendentes({ p_sessao: s, p_presenca: st });
   // Turma 01: A1 há 14 dias (2 faltas e 1 justificada) e A2 há 7 dias
-  let s = sessao(t1, "N1-A1", -14, "09:00", "11:00", 20, "Victoria Soares"); conv(s, g.t1);
-  marca(s, g.t1[9], "Falta", "Não avisou"); marca(s, g.t1[10], "Falta", "Plantão no stand", "Gerente pediu para ficar no stand"); marca(s, g.t1[11], "Justificada / afastado", "Atestado médico"); todos(s, "Presente"); fecha(s, 120);
+  let s = sessao(t1, "N1-A1", -14, "09:00", "10:30", 20, "Victoria Soares"); conv(s, g.t1);
+  marca(s, g.t1[9], "Falta", "Não avisou"); marca(s, g.t1[10], "Falta", "Plantão no stand", "Gerente pediu para ficar no stand"); marca(s, g.t1[11], "Justificada / afastado", "Atestado médico"); todos(s, "Presente"); fecha(s, 90);
   // Transferência depois da aula: a gestão da época continua gravada na convocação
   Object.assign(g.t1[0], D.outroGerente(g.t1[0]));
-  s = sessao(t1, "N1-A2", -7, "09:00", "12:00", 20, "Victoria Soares"); conv(s, g.t1.slice(0, 9));
-  marca(s, g.t1[8], "Falta", "Sem justificativa"); todos(s, "Presente"); fecha(s, 170);
+  s = sessao(t1, "N1-A2", -7, "09:00", "10:30", 20, "Victoria Soares"); conv(s, g.t1.slice(0, 9));
+  marca(s, g.t1[8], "Falta", "Sem justificativa"); todos(s, "Presente"); fecha(s, 85);
   // Desligamento depois da A2: o histórico fica
   g.t1[5].situacao = "INATIVO"; g.t1[5].saida = somaDias(H, -4);
   // Turma 02: A1 há 9 dias (1 em mesa) e A2 há 2 dias (1 falta)
-  s = sessao(t2, "N1-A1", -9, "14:00", "16:00", 15, "Victoria Soares"); conv(s, g.t2); marca(s, g.t2[9], "Em mesa", "Atendendo cliente no plantão"); todos(s, "Presente"); fecha(s, 125);
-  s = sessao(t2, "N1-A2", -2, "14:00", "17:00", 15, "Victoria Soares"); conv(s, g.t2.slice(0, 9)); marca(s, g.t2[3], "Falta", "Não avisou"); todos(s, "Presente"); fecha(s, 180);
+  s = sessao(t2, "N1-A1", -9, "14:00", "15:30", 15, "Victoria Soares"); conv(s, g.t2); marca(s, g.t2[9], "Em mesa", "Atendendo cliente no plantão"); todos(s, "Presente"); fecha(s, 95);
+  s = sessao(t2, "N1-A2", -2, "14:00", "15:30", 15, "Victoria Soares"); conv(s, g.t2.slice(0, 9)); marca(s, g.t2[3], "Falta", "Não avisou"); todos(s, "Presente"); fecha(s, 90);
   // Reposição da A1 há 3 dias: uma pessoa conclui (uma conclusão só), outra falta de novo (reincidência)
-  s = sessao(tr, "N1-A1", -3, "17:00", "19:00", 10, "Victoria Soares"); conv(s, [g.t1[9], g.t1[10]]); marca(s, g.t1[10], "Falta", "Plantão no stand"); todos(s, "Presente"); fecha(s, 115);
+  s = sessao(tr, "N1-A1", -3, "17:00", "18:30", 10, "Victoria Soares"); conv(s, [g.t1[9], g.t1[10]]); marca(s, g.t1[10], "Falta", "Plantão no stand"); todos(s, "Presente"); fecha(s, 85);
   // Turma 03: A1 há 6 dias; A2 cancelada há 5 dias (não conta hora nem conclusão); A2 refeita ontem com chamada ABERTA
-  s = sessao(t3, "N1-A1", -6, "09:00", "11:00", 15, "Victoria Soares"); conv(s, g.t3); marca(s, g.t3[2], "Falta", "Não avisou"); todos(s, "Presente"); fecha(s, 120);
-  s = sessao(t3, "N1-A2", -5, "09:00", "12:00", 15, "Victoria Soares"); conv(s, g.t3.filter((_, i) => i !== 2)); F.academy_cancelar_sessao({ p_sessao: s, p_motivo: "Treinador indisponível" });
-  s = sessao(t3, "N1-A2", -1, "09:00", "12:00", 15, "Victoria Soares"); conv(s, g.t3.filter((_, i) => i !== 2));
+  s = sessao(t3, "N1-A1", -6, "09:00", "10:30", 15, "Victoria Soares"); conv(s, g.t3); marca(s, g.t3[2], "Falta", "Não avisou"); todos(s, "Presente"); fecha(s, 90);
+  s = sessao(t3, "N1-A2", -5, "09:00", "10:30", 15, "Victoria Soares"); conv(s, g.t3.filter((_, i) => i !== 2)); F.academy_cancelar_sessao({ p_sessao: s, p_motivo: "Treinador indisponível" });
+  s = sessao(t3, "N1-A2", -1, "09:00", "10:30", 15, "Victoria Soares"); conv(s, g.t3.filter((_, i) => i !== 2));
   g.t3.filter((_, i) => i !== 2).slice(0, 5).forEach(p => marca(s, p, "Presente"));
   // Hoje: A1 da Turma 04 de manhã e A3 da Turma 01 à tarde (chamadas a fazer)
-  s = sessao(t4, "N1-A1", 0, "09:00", "11:00", 12, "Victoria Soares"); conv(s, g.t4);
-  s = sessao(t1, "N1-A3", 0, "14:00", "17:00", 20, "Victoria Soares"); conv(s, g.t1.slice(0, 8).filter((_, i) => i !== 5));
+  s = sessao(t4, "N1-A1", 0, "09:00", "10:30", 12, "Victoria Soares"); conv(s, g.t4);
+  s = sessao(t1, "N1-A3", 0, "14:00", "15:30", 20, "Victoria Soares"); conv(s, g.t1.slice(0, 8).filter((_, i) => i !== 5));
   // Próximos dias: A3 da Turma 02 e reposição da A1 (fica "agendada")
-  s = sessao(t2, "N1-A3", 2, "14:00", "17:00", 15, "Victoria Soares"); conv(s, g.t2.slice(0, 9).filter((_, i) => i !== 3));
-  s = sessao(tr, "N1-A1", 3, "17:00", "19:00", 10, "Victoria Soares"); conv(s, [g.t1[10], g.t1[11]]);
+  s = sessao(t2, "N1-A3", 2, "14:00", "15:30", 15, "Victoria Soares"); conv(s, g.t2.slice(0, 9).filter((_, i) => i !== 3));
+  s = sessao(tr, "N1-A1", 3, "17:00", "18:30", 10, "Victoria Soares"); conv(s, [g.t1[10], g.t1[11]]);
   S.auditoria = []; usuario = eu; salva();
 }
 
