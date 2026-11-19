@@ -14,8 +14,9 @@ window.AcademyDemoDados = {
       do { id = (p1[0].slice(0, 3) + p1[2].slice(-3) + String(100 + Math.floor(rnd() * 900))).toUpperCase(); } while (usados.has(id)); usados.add(id);
       pessoas.push({ id, nome, apelido: rnd() < .45 ? `${p1[0].charAt(0)}${p1[0].slice(1).toLowerCase()} ${p1[1].charAt(0)}.` : "", funcao: rnd() < .08 ? "COORDENADOR DE VENDAS 3.0" : `CONSULTOR DE VENDAS ${pega(["1.0", "1.5", "2.0"])}`, situacao: "ATIVO", ...h, entrada: null, saida: null });
     }
-    // 6 ativos sem ID na ETV: aparecem como pendência de cadastro e não podem ser convocados
-    pessoas.slice(144).forEach(p => { p.id = null; });
+    // 4 IDs repetidos: quem entrou depois recebe o sufixo -2 (mesma regra do banco); 2 com nome incompleto ficam sem ID
+    pessoas.slice(144, 148).forEach((p, i) => { p.id = pessoas[60 + i].id + "-2"; });
+    pessoas.slice(148).forEach(p => { p.id = null; });
     const grupos = { t1: pessoas.slice(0, 12), t2: pessoas.slice(12, 22), t3: pessoas.slice(22, 32), t4: pessoas.slice(32, 40), t0: pessoas.slice(40, 52) };
     return { pessoas, grupos, outroGerente: p => { const h = hier.find(x => x.gerente !== p.gerente && x.diretor !== p.diretor); return { ...h }; } };
   }

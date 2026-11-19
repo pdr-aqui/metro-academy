@@ -1,6 +1,6 @@
 "use strict";
 (() => {
-const CFG = window.ACADEMY_CONFIG || {}, DEMO = !CFG.supabaseUrl || /[?&]demo\b/.test(location.search), VER = "0.3.0";
+const CFG = window.ACADEMY_CONFIG || {}, DEMO = !CFG.supabaseUrl || /[?&]demo\b/.test(location.search), VER = "0.3.1";
 const $app = document.getElementById("app"), $modal = document.getElementById("modal"), $aviso = document.getElementById("aviso");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const D0 = s => new Date(String(s).slice(0, 10) + "T12:00:00");
@@ -357,7 +357,7 @@ function csv() {
 /* ===== Catálogo e regras ===== */
 function vCat() {
   const C = B.C, chips = l => l.map(chipP).join(" ");
-  casca(`<div class="kpis"><div class="kpi k-branco"><b>${B.aulas.filter(a => a.situacao !== "inativo").length}</b><span>Aulas no catálogo</span><small>${B.aulas.filter(a => a.situacao === "provisorio").length} com título provisório</small></div><div class="kpi k-branco"><b>${B.turmas.length}</b><span>Turmas</span></div><div class="kpi k-branco"><b>${B.sessoes.length}</b><span>Sessões registradas</span></div><div class="kpi k-branco"><b>${n0(B.pessoas.filter(ativo).length)}</b><span>Ativos com ID</span><small>${B.sem_id.length} sem ID (repetido)</small></div></div>
+  casca(`<div class="kpis"><div class="kpi k-branco"><b>${B.aulas.filter(a => a.situacao !== "inativo").length}</b><span>Aulas no catálogo</span><small>${B.aulas.filter(a => a.situacao === "provisorio").length} com título provisório</small></div><div class="kpi k-branco"><b>${B.turmas.length}</b><span>Turmas</span></div><div class="kpi k-branco"><b>${B.sessoes.length}</b><span>Sessões registradas</span></div><div class="kpi k-branco"><b>${n0(B.pessoas.filter(ativo).length)}</b><span>Ativos com ID</span><small>${B.sem_id.length} sem ID</small></div></div>
   <h2><i class="bolinha b-verde"></i>Aulas ${admin() ? `<button class="btn sec peq dir" data-a="nova-aula">${IC.mais}Nova aula</button>` : ""}</h2>
   <div class="tab"><table><thead><tr><th>Código</th><th>Nível</th><th>Título</th><th class="n">Duração padrão</th><th>Conteúdo</th>${admin() ? "<th></th>" : ""}</tr></thead><tbody>${B.aulas.map(a => `<tr><td><b>${esc(a.id)}</b></td><td>${esc(a.nivel)} · Aula ${a.numero}</td><td>${esc(a.titulo)}</td><td class="n">${fh(a.duracao_min)}</td><td><span class="chip ${a.situacao === "oficial" ? "p-pres" : a.situacao === "inativo" ? "p-na" : "p-mesa"}">${{ provisorio: "Provisório", oficial: "Oficial", inativo: "Inativo" }[a.situacao]}</span></td>${admin() ? `<td><button class="btn txt peq" data-ea="${a.id}">Editar</button></td>` : ""}</tr>`).join("")}</tbody></table></div>
   <p class="nota">${IC.info}<span>Catálogo oficial da UMC (19/11/2026): N1 a N4, todas as aulas com 1h30. Cada nível termina com prova de avaliação (só para quem concluiu todas as aulas) e entrega de certificado (só para aprovados), lançadas na aba Consultores.</span></p>
@@ -406,7 +406,7 @@ function dlgConvocar(sid, preSel) {
   modal(`<h2>Convocar para ${esc(nomeAula(a))}</h2><p class="muted">${esc((B.tur.get(s.turma_id) || {}).nome)} · ${dataLonga(s.data)}, ${hm(s.inicio)}${s.capacidade ? ` · ${s.capacidade} lugares` : ""}</p>
   <div class="filtros f5 em-janela"><div class="bus">${IC.busca}<input id="ct2" type="search" placeholder="Nome, apelido ou ID" aria-label="Buscar" autofocus></div><select id="cd" aria-label="Diretor"><option value="">Diretores</option>${op(unicos(P, "diretor"))}</select><select id="cu" aria-label="Superintendente"><option value="">Superint.</option>${op(unicos(P, "superintendente"))}</select><select id="cg" aria-label="Gerente"><option value="">Gerentes</option>${op(unicos(P, "gerente"))}</select><select id="cs" aria-label="Mostrar">${op([["elegiveis", "Elegíveis e reposições"], ["todos", "Todos os ativos"]], "elegiveis")}</select></div>
   <div class="conv-topo"><span id="cq"></span><button class="btn txt peq" id="call">Marcar todos os elegíveis da lista</button></div><div class="conv-lista" id="cl"></div>
-  ${B.sem_id.length ? `<p class="muted peq">${B.sem_id.length} ativos sem ID (ID repetido em outro CPF) não aparecem aqui até o cadastro ser ajustado.</p>` : ""}
+  ${B.sem_id.length ? `<p class="muted peq">${B.sem_id.length} ativos sem ID (nome incompleto na ETV) não aparecem aqui até o cadastro ser ajustado.</p>` : ""}
   <div class="bts"><button class="btn txt" data-a="fecha">Voltar</button><button class="btn" id="go">Convocar</button></div><div class="erro" id="er" role="alert"></div>`, true);
   const lista = () => { const t = nk(f.t); return P.filter(p => (!t || nk(p.nome + " " + p.apelido + " " + p.id).includes(t)) && (!f.d || p.diretor === f.d) && (!f.u || p.superintendente === f.u) && (!f.g || p.gerente === f.g)).map(p => ({ p, tg: tag(p) })).filter(x => f.so === "todos" || ["eleg", "repo"].includes(x.tg[0]) || sel.has(x.p.id)); };
   const conta = () => { const tot = ja.size + sel.size; document.getElementById("cq").innerHTML = `<b>${sel.size}</b> selecionados · ${tot}${s.capacidade ? ` de ${s.capacidade}` : ""} na sessão${s.capacidade && tot > s.capacidade ? ` <span class="chip p-falta">passa da capacidade</span>` : ""}`; document.getElementById("go").textContent = sel.size ? `Convocar ${sel.size}` : "Convocar"; document.getElementById("go").disabled = !sel.size; };
@@ -511,7 +511,7 @@ function dlgCert(nv) {
   conta();
 }
 function dlgSemId() {
-  modal(`<h2>Ativos sem ID</h2><p class="muted">O ID segue a regra da coluna ID da ETV: 3 primeiras letras do nome + 3 últimas + 3 primeiros dígitos do CPF. Quando dois CPFs geram o mesmo ID, ninguém com esse ID pode ser convocado até o RH ajustar o nome no cadastro; na próxima sincronização a pessoa aparece.</p><div class="lista-simples">${B.sem_id.map(p => `<div><b>${quem(p)}</b><small>${p.motivo ? esc(p.motivo) + " · " : ""}${lideranca(p)}</small></div>`).join("") || "<p>Nenhum.</p>"}</div><div class="bts"><button class="btn" data-a="fecha">Fechar</button></div>`, true);
+  modal(`<h2>Ativos sem ID</h2><p class="muted">O ID segue a regra da coluna ID da ETV: 3 primeiras letras do nome + 3 últimas + 3 primeiros dígitos do CPF. Quando dois CPFs geram o mesmo ID, quem entrou primeiro na Metrocasa fica com ele e quem entrou depois recebe o sufixo -2, -3. Fica sem ID só quem está com o nome incompleto na ETV; corrigido o cadastro, a pessoa aparece na próxima sincronização.</p><div class="lista-simples">${B.sem_id.map(p => `<div><b>${quem(p)}</b><small>${p.motivo ? esc(p.motivo) + " · " : ""}${lideranca(p)}</small></div>`).join("") || "<p>Nenhum.</p>"}</div><div class="bts"><button class="btn" data-a="fecha">Fechar</button></div>`, true);
 }
 
 /* ===== Cliques ===== */

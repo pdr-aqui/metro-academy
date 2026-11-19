@@ -2,7 +2,7 @@
 /* Modo demonstração: as MESMAS regras de banco/01_schema_academy.sql, rodando neste aparelho (localStorage).
    Serve para homologar com a Victoria sem tocar em dado real. Pessoas e turmas são fictícias. */
 window.AcademyDemo = (() => {
-const CHAVE = "academy_demo_v3";
+const CHAVE = "academy_demo_v4";
 let S = null, usuario = null;
 const hojeISO = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 const somaDias = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toLocaleDateString("sv-SE"); };
@@ -52,7 +52,7 @@ const F = {
     exige(); const ativo = p => String(p.situacao || "").trim().toUpperCase() === "ATIVO";
     return copia({ hoje: hojeISO(), sync_em: S.sync_em, config: S.config,
       pessoas: S.pessoas.filter(p => p.id && (ativo(p) || S.convocacoes.some(v => v.pessoa_id === p.id))).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
-      sem_id: S.pessoas.filter(p => !p.id && ativo(p)).map(({ nome, apelido, gerente, superintendente, diretor }) => ({ nome, apelido, gerente, superintendente, diretor, motivo: "ID repetido em outro CPF" })),
+      sem_id: S.pessoas.filter(p => !p.id && ativo(p)).map(({ nome, apelido, gerente, superintendente, diretor }) => ({ nome, apelido, gerente, superintendente, diretor, motivo: "Nome incompleto na ETV" })),
       aulas: S.aulas, turmas: S.turmas, sessoes: S.sessoes, convocacoes: S.convocacoes, conclusoes: S.conclusoes, reposicoes: S.reposicoes, provas: S.provas, certificados: S.certificados });
   },
   academy_salvar_config({ p }) {
