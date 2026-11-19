@@ -1,4 +1,3 @@
-// Vazio = modo demonstração, com pessoas fictícias e dados só neste aparelho.
-// Para ligar o banco real (depois da decisão D0 e de rodar banco/01..03), preencha com a URL e a chave PÚBLICA (publishable).
-// Nunca coloque a chave secreta neste arquivo.
-window.ACADEMY_CONFIG = { supabaseUrl: "", supabaseChavePublica: "" };
+// Banco real (Supabase do Acompanhamento, schema academy). A demonstração continua em ?demo (pessoas fictícias, dados só no aparelho).
+// Use somente a chave pública (publishable). Nunca coloque a chave secreta neste arquivo.
+window.ACADEMY_CONFIG = { supabaseUrl: "https://jspfqktrbimrarimpzgh.supabase.co", supabaseChavePublica: "sb_publishable_v5q-FJsZbsufq31dqi3zlA_ddzJQ_f-" };

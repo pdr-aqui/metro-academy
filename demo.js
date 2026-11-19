@@ -52,7 +52,7 @@ const F = {
     exige(); const ativo = p => String(p.situacao || "").trim().toUpperCase() === "ATIVO";
     return copia({ hoje: hojeISO(), sync_em: S.sync_em, config: S.config,
       pessoas: S.pessoas.filter(p => p.id && (ativo(p) || S.convocacoes.some(v => v.pessoa_id === p.id))).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
-      sem_id: S.pessoas.filter(p => !p.id && ativo(p)).map(({ nome, apelido, gerente, superintendente, diretor }) => ({ nome, apelido, gerente, superintendente, diretor })),
+      sem_id: S.pessoas.filter(p => !p.id && ativo(p)).map(({ nome, apelido, gerente, superintendente, diretor }) => ({ nome, apelido, gerente, superintendente, diretor, motivo: "ID repetido em outro CPF" })),
       aulas: S.aulas, turmas: S.turmas, sessoes: S.sessoes, convocacoes: S.convocacoes, conclusoes: S.conclusoes, reposicoes: S.reposicoes });
   },
   academy_salvar_config({ p }) {
