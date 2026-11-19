@@ -2,7 +2,7 @@
 /* Modo demonstração: as MESMAS regras de banco/01_schema_academy.sql, rodando neste aparelho (localStorage).
    Serve para homologar com a Victoria sem tocar em dado real. Pessoas e turmas são fictícias. */
 window.AcademyDemo = (() => {
-const CHAVE = "academy_demo_v2";
+const CHAVE = "academy_demo_v3";
 let S = null, usuario = null;
 const hojeISO = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
 const somaDias = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toLocaleDateString("sv-SE"); };
@@ -53,7 +53,7 @@ const F = {
     return copia({ hoje: hojeISO(), sync_em: S.sync_em, config: S.config,
       pessoas: S.pessoas.filter(p => p.id && (ativo(p) || S.convocacoes.some(v => v.pessoa_id === p.id))).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
       sem_id: S.pessoas.filter(p => !p.id && ativo(p)).map(({ nome, apelido, gerente, superintendente, diretor }) => ({ nome, apelido, gerente, superintendente, diretor, motivo: "ID repetido em outro CPF" })),
-      aulas: S.aulas, turmas: S.turmas, sessoes: S.sessoes, convocacoes: S.convocacoes, conclusoes: S.conclusoes, reposicoes: S.reposicoes });
+      aulas: S.aulas, turmas: S.turmas, sessoes: S.sessoes, convocacoes: S.convocacoes, conclusoes: S.conclusoes, reposicoes: S.reposicoes, provas: S.provas, certificados: S.certificados });
   },
   academy_salvar_config({ p }) {
     const por = exige("admin"), antes = copia(S.config);
@@ -142,14 +142,44 @@ const F = {
     const por = exige("admin"); if (!S.config.permite_equivalencia) erro("equivalencia_desligada"); if (vazio(p_motivo)) erro("motivo_obrigatorio");
     if (!S.conclusoes.some(x => x.pessoa_id === p_pessoa && x.aula_id === p_aula)) S.conclusoes.push({ pessoa_id: p_pessoa, aula_id: p_aula, sessao_id: null, criterio: "equivalencia", motivo: p_motivo.trim(), registrado_por: por, em: agora() });
     audita("equivalencia", `${p_pessoa}/${p_aula}`, null, null, p_motivo); recalcula(p_pessoa, p_aula);
+  },
+  /* Prova e certificado por nível (espelho de banco/03_provas_certificados.sql) */
+  academy_lancar_prova({ p_nivel, p_data, p_itens }) {
+    const por = exige("admin", "operador"); if (!/^N[1-4]$/.test(p_nivel) || !p_data || !Array.isArray(p_itens) || !p_itens.length) erro("dados_invalidos");
+    if (p_data > hojeISO()) erro("data_futura");
+    const novos = p_itens.map(x => {
+      if (!["aprovado", "reprovado"].includes(x.resultado)) erro("dados_invalidos"); if (!pessoaPorId(x.pessoa)) erro("pessoa_inexistente");
+      if (!aulasCompletas(x.pessoa, p_nivel)) erro("aulas_incompletas"); if (S.provas.some(r => r.pessoa_id === x.pessoa && r.nivel === p_nivel && r.resultado === "aprovado")) erro("ja_aprovado");
+      const nota = x.nota === "" || x.nota == null ? null : +x.nota; if (nota != null && !(nota >= 0 && nota <= 10)) erro("dados_invalidos");
+      return { id: ++S.seq.prova, pessoa_id: x.pessoa, nivel: p_nivel, data: p_data, resultado: x.resultado, nota, obs: vazio(x.obs) ? null : x.obs.trim(), registrado_por: por };
+    });
+    S.provas.push(...novos); audita("lancar_prova", `${p_nivel} ${p_data}`, null, p_itens); return novos.length;
+  },
+  academy_excluir_prova({ p_id, p_motivo }) {
+    exige("admin", "operador"); if (vazio(p_motivo)) erro("motivo_obrigatorio"); const r = S.provas.find(x => x.id === +p_id); if (!r) erro("dados_invalidos");
+    if (r.resultado === "aprovado" && S.certificados.some(c => c.pessoa_id === r.pessoa_id && c.nivel === r.nivel)) erro("tem_certificado");
+    S.provas = S.provas.filter(x => x !== r); audita("excluir_prova", String(r.id), r, null, p_motivo);
+  },
+  academy_entregar_certificados({ p_nivel, p_data, p_pessoas }) {
+    const por = exige("admin", "operador"); if (!/^N[1-4]$/.test(p_nivel) || !p_data || !Array.isArray(p_pessoas) || !p_pessoas.length) erro("dados_invalidos");
+    if (p_data > hojeISO()) erro("data_futura"); let n = 0;
+    p_pessoas.forEach(id => { const ap = S.provas.filter(r => r.pessoa_id === id && r.nivel === p_nivel && r.resultado === "aprovado").map(r => r.data).sort()[0];
+      if (!ap) erro("sem_aprovacao"); if (p_data < ap) erro("data_antes_prova");
+      if (!S.certificados.some(c => c.pessoa_id === id && c.nivel === p_nivel)) { S.certificados.push({ pessoa_id: id, nivel: p_nivel, data: p_data, registrado_por: por }); n++; } });
+    audita("entregar_certificados", `${p_nivel} ${p_data}`, null, p_pessoas); return n;
+  },
+  academy_excluir_certificado({ p_pessoa, p_nivel, p_motivo }) {
+    exige("admin", "operador"); if (vazio(p_motivo)) erro("motivo_obrigatorio"); const c = S.certificados.find(x => x.pessoa_id === p_pessoa && x.nivel === p_nivel); if (!c) erro("dados_invalidos");
+    S.certificados = S.certificados.filter(x => x !== c); audita("excluir_certificado", `${p_pessoa}/${p_nivel}`, c, null, p_motivo);
   }
 };
+const aulasCompletas = (pid, nv) => { const l = S.aulas.filter(a => a.nivel === nv && a.situacao !== "inativo"); return l.length > 0 && l.every(a => S.conclusoes.some(k => k.pessoa_id === pid && k.aula_id === a.id)); };
 const STATUS = ["Pendente", "Presente", "Falta", "Em mesa", "Justificada / afastado", "Desligado", "Não se aplica"];
 
 /* ===== Dados fictícios de homologação: montados chamando as próprias funções, como a Victoria faria ===== */
 function semeia() {
   const H = hojeISO(), D = window.AcademyDemoDados.gera();
-  S = { seq: { ses: 0, tur: 0, rep: 0 }, sync_em: new Date(Date.now() - 23 * 60000).toISOString(),
+  S = { seq: { ses: 0, tur: 0, rep: 0, prova: 0 }, sync_em: new Date(Date.now() - 23 * 60000).toISOString(),
     config: { status_conclui: ["Presente"], status_reposicao: ["Falta", "Justificada / afastado", "Em mesa"], status_fora_denominador: ["Não se aplica", "Desligado"], exige_ordem: true, permite_equivalencia: false, sala_padrao: "Sala de vidro – 39º andar", atualizado_em: null, atualizado_por: null },
     pessoas: D.pessoas, aulas: [
       { id: "N1-A1", nivel: "N1", numero: 1, titulo: "+Agendamentos", duracao_min: 90, situacao: "oficial" },
@@ -168,7 +198,7 @@ function semeia() {
       { id: "N3-A3", nivel: "N3", numero: 3, titulo: "Tudo é networking!", duracao_min: 90, situacao: "oficial" },
       { id: "N4-A1", nivel: "N4", numero: 1, titulo: "Alta Performance", duracao_min: 90, situacao: "oficial" },
       { id: "N4-A2", nivel: "N4", numero: 2, titulo: "+Líder", duracao_min: 90, situacao: "oficial" }],
-    turmas: [], sessoes: [], convocacoes: [], conclusoes: [], reposicoes: [], auditoria: [] };
+    turmas: [], sessoes: [], convocacoes: [], conclusoes: [], reposicoes: [], provas: [], certificados: [], auditoria: [] };
   const eu = usuario; usuario = { nome: "Victoria Soares", papel: "operador" };
   const g = D.grupos, T = n => F.academy_salvar_turma({ p: { nome: n, nivel: "N1" } });
   const t1 = T("N1 · Turma 01"), t2 = T("N1 · Turma 02"), t3 = T("N1 · Turma 03"), t4 = T("N1 · Turma 04"), tr = T("N1 · Reposições");
@@ -177,6 +207,11 @@ function semeia() {
   const marca = (s, p, st, mot, obs) => F.academy_marcar({ p_sessao: s, p_pessoa: p.id, p_presenca: st, p_motivo: mot, p_obs: obs });
   const fecha = (s, min) => F.academy_fechar_chamada({ p_sessao: s, p_duracao_min: min });
   const todos = (s, st) => F.academy_marcar_pendentes({ p_sessao: s, p_presenca: st });
+  // Turma 00 (há dois meses): fez as 6 aulas do N1. Prova há 28 dias: 10 aprovados, 1 reprovado, 1 ainda sem prova. Certificado entregue a 7.
+  const t0 = T("N1 · Turma 00");
+  [1, 2, 3, 4, 5, 6].forEach(n => { const x = sessao(t0, "N1-A" + n, -70 + n * 6, "09:00", "10:30", 15, "Victoria Soares"); conv(x, g.t0); todos(x, "Presente"); fecha(x, 90); });
+  F.academy_lancar_prova({ p_nivel: "N1", p_data: somaDias(H, -28), p_itens: g.t0.slice(0, 11).map((p, i) => ({ pessoa: p.id, resultado: i < 10 ? "aprovado" : "reprovado", nota: i < 10 ? [9, 8.5, 7, 10, 8, 7.5, 9.5, 8, 7, 6.5][i] : 5.5 })) });
+  F.academy_entregar_certificados({ p_nivel: "N1", p_data: somaDias(H, -21), p_pessoas: g.t0.slice(0, 7).map(p => p.id) });
   // Turma 01: A1 há 14 dias (2 faltas e 1 justificada) e A2 há 7 dias
   let s = sessao(t1, "N1-A1", -14, "09:00", "10:30", 20, "Victoria Soares"); conv(s, g.t1);
   marca(s, g.t1[9], "Falta", "Não avisou"); marca(s, g.t1[10], "Falta", "Plantão no stand", "Gerente pediu para ficar no stand"); marca(s, g.t1[11], "Justificada / afastado", "Atestado médico"); todos(s, "Presente"); fecha(s, 90);

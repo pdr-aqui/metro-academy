@@ -175,3 +175,9 @@ legend{font-weight:700;font-size:15px;margin-bottom:8px;padding:0}
   .f-tab tr{break-inside:avoid}
   .f-h{break-after:avoid}
 }
+
+/* Prova e certificado */
+.cv.pv{cursor:default;flex-wrap:wrap}.cv.pv .tx{min-width:180px}
+.cv.pv input.nota{width:84px;height:auto;min-height:40px;padding:6px 10px;accent-color:auto}
+.cv.pv select{width:auto;min-width:140px}
+.trilha .marco .rt{font-weight:800}

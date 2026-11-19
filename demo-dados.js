@@ -16,7 +16,7 @@ window.AcademyDemoDados = {
     }
     // 6 ativos sem ID na ETV: aparecem como pendência de cadastro e não podem ser convocados
     pessoas.slice(144).forEach(p => { p.id = null; });
-    const grupos = { t1: pessoas.slice(0, 12), t2: pessoas.slice(12, 22), t3: pessoas.slice(22, 32), t4: pessoas.slice(32, 40) };
+    const grupos = { t1: pessoas.slice(0, 12), t2: pessoas.slice(12, 22), t3: pessoas.slice(22, 32), t4: pessoas.slice(32, 40), t0: pessoas.slice(40, 52) };
     return { pessoas, grupos, outroGerente: p => { const h = hier.find(x => x.gerente !== p.gerente && x.diretor !== p.diretor); return { ...h }; } };
   }
 };
